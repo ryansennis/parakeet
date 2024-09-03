@@ -1,3 +1,4 @@
-/env
+feedback_logs
 /opted_in_messages.txt
 /src/.env
+/env
