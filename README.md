@@ -48,6 +48,26 @@ COMMAND_PREFIX
 MAX_DISCORD_MESSAGE_LENGTH
 ```
 
+## Usage
+
+To start the bot, run:
+
+```sh
+python src/parakeet/bot.py
+```
+
+## Testing
+
+To run the tests, use the following command:
+
+```sh
+python -m unittest discover -s tests
+```
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
 ## License
 Apache License
 Version 2.0, January 2004
