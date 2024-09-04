@@ -2,12 +2,18 @@ import os
 import discord
 from .shared import logger
 from .shared import generate_response
+from .models import GPTModel, BotQuery
+from .config import MAX_DISCORD_MESSAGE_LENGTH
 
-async def send_message(channel: discord.TextChannel, message_content: str) -> None:
-    chunk_size = 2000
-    for i in range(0, len(message_content), chunk_size):
+async def send_message(channel, content):
+    if channel is None:
+        logger.error("Channel is None, cannot send message.")
+        return
+
+    chunk_size = int(MAX_DISCORD_MESSAGE_LENGTH)
+    for i in range(0, len(content), chunk_size):
         try:
-            chunk = message_content[i:i + chunk_size]
+            chunk = content[i:i + chunk_size]
             message = await channel.send(chunk)  # Capture the message object
             await add_feedback_reactions(message)  # Pass the message object
         except Exception as e:
@@ -27,7 +33,7 @@ async def send_reply(message: discord.Message, reply_content: str) -> None:
     Returns:
         None
     """
-    chunk_size = 2000
+    chunk_size = int(MAX_DISCORD_MESSAGE_LENGTH)
     for i in range(0, len(reply_content), chunk_size):
         try:
             chunk = reply_content[i:i + chunk_size]
@@ -94,7 +100,7 @@ async def add_feedback_reactions(response):
     except discord.errors.HTTPException as e:
         logger.error(f"Error adding feedback reactions: {e}", exc_info=True)
 
-async def bot_respond(message):
+async def bot_message(query: BotQuery) -> None:
     """
     Generate a response to a given message and send it to the channel.
 
@@ -107,13 +113,15 @@ async def bot_respond(message):
     Returns:
         None
     """
+    message, model = query.unpack()
+    channel = message.channel
     try:
-        response = await generate_response(message)
-        await send_message(message.channel, response)
+        response = await generate_response(query)
+        await send_message(channel, response)
     except Exception as e:
         logger.error(f"Error generating response message: {e}", exc_info=True)
 
-async def bot_reply(message: discord.Message):
+async def bot_reply(query: BotQuery) -> None:
     """
     Generates a response reply based on the given message.
     Parameters:
@@ -123,11 +131,18 @@ async def bot_reply(message: discord.Message):
     Raises:
     - Exception: If an error occurs while generating the response reply.
     """
-    
     try:
+        # unpack the message and check if it is a reply
+        message, model = query.unpack()
         reference = message.reference
+        if reference is None or reference.resolved is None:
+            logger.error("The message is not a reply to another message.")
+            return
+
+        # Get the original message and generate a response
         original_message = reference.resolved
-        response = await generate_response(original_message)
+        query = BotQuery(message=original_message, model=model)
+        response = await generate_response(query)
         # Send the response as a reply to the original message
         await send_message(message.channel, response)
     except Exception as e:

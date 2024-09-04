@@ -5,3 +5,4 @@ src/__pycache__/config.cpython-311.pyc
 src/__pycache__/messaging.cpython-311.pyc
 src/__pycache__/tasks.cpython-311.pyc
 src/__pycache__/utils.cpython-311.pyc
+.vscode/settings.json
