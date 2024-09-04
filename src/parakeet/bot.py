@@ -1,12 +1,12 @@
-from gpt.gpt import process_gpt_message
+from parakeet.gpt import process_gpt_message
 import logging
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-from config import discord_token, OPT_IN_ROLE_NAME
-from gpt.gpt import process_gpt_message
-from messaging.messaging import send_help_message, send_privacy_policy
-from utils.utils import log_user_user_interaction, record_reaction
+from parakeet.config import discord_token, OPT_IN_ROLE_NAME
+from parakeet.messaging import send_help_message, send_privacy_policy
+from parakeet.utils import log_user_user_interaction, record_reaction
+
 
 # Load environment variables from .env file
 load_dotenv()

@@ -3,7 +3,7 @@ import json
 import logging
 import discord
 from datetime import datetime
-from config import USER_BOT_INTERACTIONS_DIR, CONVERSATION_TIMEOUT
+from parakeet.config import USER_BOT_INTERACTIONS_DIR, CONVERSATION_TIMEOUT
 
 # Configure logging
 logger = logging.getLogger(__name__)

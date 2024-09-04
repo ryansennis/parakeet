@@ -1,7 +1,7 @@
 import os
 import logging
 import discord
-from gpt.gpt import generate_response
+from parakeet.gpt import generate_response
 from typing import Union, Optional, Dict
 
 async def send_message(channel, message_content):

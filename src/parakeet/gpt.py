@@ -1,4 +1,10 @@
-from utils.utils import (
+import datetime
+import discord
+import logging
+import openai
+from typing import Union
+from parakeet.config import OPT_IN_ROLE_NAME
+from utils import (
     conversation_histories,
     has_opt_in_role,
     load_conversation_histories,
@@ -6,14 +12,7 @@ from utils.utils import (
     track_sent_messages,
     update_conversation_history,
 )
-
-from config import OPT_IN_ROLE_NAME
-import datetime
-import discord
-import logging
-import openai
-from typing import Union
-from messaging.messaging import generate_response_message, generate_response_reply, send_message
+from messaging import generate_response_message, generate_response_reply, send_message
 
 async def generate_response(query: discord.Message) -> dict:
     """
@@ -33,14 +32,14 @@ async def generate_response(query: discord.Message) -> dict:
         server_id = query.guild.id if query.guild else "DM"
         user_id = query.author.id
 
-        # load conversation histories from file
+        # Load conversation histories from file
         load_conversation_histories(server_id, user_id)
 
-        # store the message in the conversation history
+        # Store the message in the conversation history
         track_sent_messages(user_id, query)
         
         conversation_history = conversation_histories[server_id][user_id]['messages']
-        start_time = datetime.now()
+        start_time = datetime.datetime.now()
         user_nickname = query.author.nick if query.guild else query.author.name
         
         messages = [
@@ -50,12 +49,12 @@ async def generate_response(query: discord.Message) -> dict:
         ]
         
         response = openai.ChatCompletion.create(
-            model="gpt-4o",
+            model="gpt-4",
             messages=messages,
             max_tokens=4096
         )
         
-        end_time = datetime.now()
+        end_time = datetime.datetime.now()
         response_time = (end_time - start_time).total_seconds()
         response_message = response.choices[0].message['content'].strip()
         
