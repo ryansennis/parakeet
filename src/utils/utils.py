@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 conversation_histories = {}
 message_histories = {}
 
-CONVERSATION_HISTORY_FILE = 'feedback_logs\\user_bot\\conversation_histories.json'
 USER_USER_INTERACTIONS_FILE = os.path.join(USER_BOT_INTERACTIONS_DIR, "user_user_interactions.json")
 
 USER_DATA_DIR = os.path.join(USER_BOT_INTERACTIONS_DIR, "user_data")
@@ -44,9 +43,9 @@ def update_conversation_history(server_id, user_id, user, user_message):
     now = datetime.now()
     if server_id not in conversation_histories:
         conversation_histories[server_id] = {}
-    if user_id not in conversation_histories[server_id] or now - datetime.fromisoformat(conversation_histories[server_id][user_id]['timestamp']) > CONVERSATION_TIMEOUT:
+    if user_id not in conversation_histories[server_id] or not conversation_histories[server_id][user_id].get('timestamp') or now - datetime.fromisoformat(conversation_histories[server_id][user_id]['timestamp']) > CONVERSATION_TIMEOUT:
         conversation_histories[server_id][user_id] = {
-            'messages': [{"role": "system", "content": "You are a helpful assistant."}],
+            'messages': [{"role": "system", "content": "Try to act like another user in the server. Be infromal with your grammar, like someone engaging an a casual internet conversation. Match the style and the tone of the user you're talking to."}],
             'timestamp': now.isoformat()
         }
     conversation_histories[server_id][user_id]['messages'].append({"role": "user", "content": f"The following message is from a Discord member named {user.display_name} ({user.mention}): '{user_message}'."})
@@ -86,10 +85,11 @@ async def clear_conversation_and_messages(server_id, user_id, channel):
         save_conversation_histories()
         logger.info(f"Cleared conversation history for user {user_id} in server {server_id}.")
 
-def track_sent_messages(user_id, message_ids):
+def track_sent_messages(user_id, messages):
     """Track sent messages."""
     if user_id not in message_histories:
         message_histories[user_id] = []
+    message_ids = [message.id for message in messages]
     message_histories[user_id].extend(message_ids)
     logger.info(f"Tracked sent messages for user {user_id}: {message_ids}")
 
