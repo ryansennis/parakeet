@@ -132,18 +132,20 @@ async def bot_reply(query: BotQuery) -> None:
     - Exception: If an error occurs while generating the response reply.
     """
     try:
-        # unpack the message and check if it is a reply
+        # Unpack the message and model from the query
         message, model = query.unpack()
         reference = message.reference
-        if reference is None or reference.resolved is None:
-            logger.error("The message is not a reply to another message.")
-            return
 
-        # Get the original message and generate a response
-        original_message = reference.resolved
-        query = BotQuery(message=original_message, model=model)
-        response = await generate_response(query)
-        # Send the response as a reply to the original message
-        await send_message(message.channel, response)
+        if reference is None or reference.resolved is None:
+            # If the message is not a reply, generate a response to the original message
+            response = await generate_response(query)
+            await send_message(message.channel, response)
+        else:
+            # If the message is a reply, get the original message and generate a response
+            original_message = reference.resolved
+            query = BotQuery(message=original_message, model=model)
+            response = await generate_response(query)
+            # Send the response as a reply to the original message
+            await send_reply(message, response)
     except Exception as e:
         logger.error(f"Error generating response reply: {e}", exc_info=True)

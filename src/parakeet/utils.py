@@ -1,9 +1,10 @@
 import logging
+import discord
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def has_opt_in_role(user, role_name):
+def has_opt_in_role(user: discord.User, role_name: str) -> bool:
     """
     Checks if a user has the specified opt-in role.
 

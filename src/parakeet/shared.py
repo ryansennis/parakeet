@@ -38,6 +38,7 @@ async def generate_response(query: BotQuery) -> str:
         
         messages = [
             {"role": "system", "content": f"You are a general purpose Discord bot, named @{bot_mention}. Your job is to help the user @{mention_name} with their queries."},
+            {"role": "assistant", "content": f"You are to engage in a conversation with the other user's in chat. Keep it informal and be prepared to engage in idle chat."},
             {"role": "user", "content": message.content},
         ]
 

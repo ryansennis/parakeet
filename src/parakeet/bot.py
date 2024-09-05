@@ -48,20 +48,44 @@ async def send_privacy(ctx):
 # discord.ext.commands.Bot does not work with this logic
 @bot.event
 async def on_message(message: discord.Message) -> None:
+    # this function captures all messages sent in the server
+    # so we need to filter out messages that are not intended for the bot
+
+    # check if the message author is the bot itself
     if message.author == bot.user:
         return
+    
+    # if the message has a gpt: prefix, we want to respond to it
+    if message.content.startswith('gpt:'):
+        # Create a BotQuery instance using the message and the gpt-4o-mini model
+        query = BotQuery(message=message, model=GPTModel.GPT_4O_MINI)
 
-    # Check if the message is a reply to the bot
-    is_reply_to_bot = message.reference and message.reference.cached_message and message.reference.cached_message.author == bot.user
-
-    # Create a BotQuery instance using the message and the gpt-4o-mini model
-    query = BotQuery(message=message, model=GPTModel.GPT_4O_MINI)
-
-    # Process the message
-    if is_reply_to_bot:
+        # Process the message
         await process_gpt_message(query, bot_reply)
+
     else:
-        await process_gpt_message(query, bot_message)
+        # check if the message is a reply to a bot message
+        is_reply_to_bot = False
+        if message.reference:
+            ref_message = await message.channel.fetch_message(message.reference.message_id)
+            if ref_message.author == bot.user:
+                is_reply_to_bot = True
+
+        bot_was_mentioned = False
+        # check if the author mentioned the bot
+        if bot.user.mentioned_in(message):
+            bot_was_mentioned = True
+
+        # Create a BotQuery instance using the message and the gpt-4o-mini model
+        query = BotQuery(message=message, model=GPTModel.GPT_4O_MINI)
+
+        # Process the message
+        if is_reply_to_bot:
+            await process_gpt_message(query, bot_reply)
+        elif bot_was_mentioned:
+            await process_gpt_message(query, bot_message)
+        else:
+            return
 
 # Start the bot
 bot.run(discord_token)
