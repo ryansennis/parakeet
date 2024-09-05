@@ -1,8 +1,5 @@
-import logging
-import discord
-
-# Configure logging
-logger = logging.getLogger(__name__)
+from .logger import logger
+from . import discord
 
 def has_opt_in_role(user: discord.User, role_name: str) -> bool:
     """

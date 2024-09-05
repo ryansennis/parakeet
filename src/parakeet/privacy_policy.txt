@@ -21,14 +21,11 @@ The data we collect is used for the following purposes:
     Personalization: To create personalized language models tailored to individual users and servers.
     Service Improvement: To improve the responses and functionality of the Bot.
     Feedback Analysis: To analyze user feedback and enhance the user experience.
-
-4. Opt-In Requirement
-
-Your data will only be collected if you opt in to the data collection process. Opting in is required for the Bot to personalize its responses and improve its functionality. You can opt in by acquiring the special Discord role "[AI Trainer]" in your server.
+    Opt-In Requirement: Your data will only be collected if you opt in to the data collection process. You can opt in by giving yourself the special Discord role "[AI Trainer]" in your server. Please note that opting in is now required to use any GPT functionality on the Bot.
 
 How to Opt-In:
 
-    Request the "[AI Trainer]" role from a server moderator.
+    Give yourself the "[AI Trainer]" role.
     Once the role is assigned, your interactions with the Bot will be recorded and used as described in this policy.
 
 5. How We Use Your Data
