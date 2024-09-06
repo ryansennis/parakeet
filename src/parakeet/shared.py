@@ -2,9 +2,23 @@ import openai
 
 from . import logger, BotQuery, discord
 
-def generate_system_prompt(query: BotQuery) -> list[dict]:
+async def generate_response(query: BotQuery) -> str:
+    """
+    Generate a response to a query.
+
+    Args:
+        query: The query object containing the message details.
+        model: The model to use for generating the response.
+
+    Returns:
+        str: The generated response message.
+
+    Raises:
+        Exception: If there is an error generating the response.
+    """
+
     try:
-        # Unpack the message and model
+        # get user mention name
         message, model = query.unpack()
         message_content = message.content
         mention_name = message.author.mention
@@ -24,37 +38,12 @@ def generate_system_prompt(query: BotQuery) -> list[dict]:
             {"role": "assistant", "content": f"You are to engage in a conversation with the other user's in chat. Keep it informal and be prepared to engage in idle chat."},
             {"role": "user", "content": message_content}
         ]
-
-        return system_prompt
-    except Exception as e:
-        logger.error(f"Error generating system prompt: {e}", exc_info=True)
-        return None
-
-async def generate_response(query: BotQuery) -> str:
-    """
-    Generate a response to a query.
-
-    Args:
-        query: The query object containing the message details.
-        model: The model to use for generating the response.
-
-    Returns:
-        str: The generated response message.
-
-    Raises:
-        Exception: If there is an error generating the response.
-    """
-
-    try:
-        # get user mention name
-        message, model = query.unpack()
-        messages: list[dict] = generate_system_prompt(query).append(message.content)
         
         await message.channel.typing()
 
-        response = await openai.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model=model.value,
-            messages=messages,
+            messages=system_prompt,
             max_tokens=4096
         )
         

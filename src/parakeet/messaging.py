@@ -3,8 +3,8 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Callable
 
-from parakeet.shared import generate_response
 from . import discord, commands, logger, BotQuery, MAX_DISCORD_MESSAGE_LENGTH
+from .shared import generate_response
 
 
 class ConversationHistory:
@@ -159,15 +159,9 @@ class ConversationHistory:
             None
         """
         while not self._stop_event.is_set():
-            try:
-                if self.is_expired():
-                    if self.on_expire:
-                        self.on_expire(self.root_message_id)
-                    self.stop_tracking()
-                # Convert timeout to seconds
-                await asyncio.sleep(self.timeout.total_seconds())
-            except Exception as e:
-                logger.error(f"Error tracking expiration: {e}", exc_info=True)
+            await asyncio.sleep(1)
+            if self.is_expired():
+                self.on_expire(self.root_message_id)
                 self.stop_tracking()
 
     def start_tracking(self):
@@ -196,7 +190,9 @@ conversation_histories: List[ConversationHistory] = []
 def handle_expiration(root_message_id: int):
     logger.info(f"Handling expiration for conversation history with root_message_id: {root_message_id}")
     global conversation_histories
+    logger.info(f"Before expiration: {len(conversation_histories)} histories")
     conversation_histories = [history for history in conversation_histories if history.root_message_id != root_message_id]
+    logger.info(f"After expiration: {len(conversation_histories)} histories")
     logger.info(f"Deleted expired conversation history with root_message_id: {root_message_id}")
     # todo: add the conversation history to a database
 
@@ -213,10 +209,6 @@ async def send_message(channel, content):
             await add_feedback_reactions(message)  # Pass the message object
         except discord.HTTPException as http_err:
             logger.error(f"HTTP error occurred while sending message: {http_err}", exc_info=True)
-        except discord.Forbidden as forbidden_err:
-            logger.error(f"Permission error occurred while sending message: {forbidden_err}", exc_info=True)
-        except discord.InvalidArgument as invalid_arg_err:
-            logger.error(f"Invalid argument error occurred while sending message: {invalid_arg_err}", exc_info=True)
         except Exception as e:
             logger.error(f"Unexpected error occurred while sending message: {e}", exc_info=True)
 
@@ -273,17 +265,20 @@ async def bot_message(query: BotQuery) -> None:
         await send_message(channel, "An error occurred while generating the response. Please try again later.")
 
 async def bot_reply(query: BotQuery) -> None:
+    from .gpt import generate_response
     try:
         message, model = query.unpack()
         reference = message.reference
 
         if reference is None or reference.resolved is None:
+            logger.debug("Reference or resolved message is None, sending message to channel.")
             response = await generate_response(query)
             await send_message(message.channel, response)
         else:
             original_message = reference.resolved
             query = BotQuery(message=original_message, model=model)
             response = await generate_response(query)
-            await send_reply(message, response)
+            await send_reply(original_message, response)
+            logger.debug(f"Replied to original message with: {response}")
     except Exception as e:
         logger.error(f"Error generating response reply: {e}", exc_info=True)
