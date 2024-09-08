@@ -3,9 +3,8 @@ from typing import Callable
 
 from .logger import logger
 from .models import BotQuery
-from .messaging import ConversationHistory
 
-async def process_gpt_message(query: BotQuery, message_func: Callable, history: ConversationHistory) -> None:
+async def process_gpt_message(query: BotQuery, message_func: Callable) -> None:
     """
     Process a GPT message.
     Args:

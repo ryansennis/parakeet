@@ -1,4 +1,5 @@
 import openai
+import openai.api_requestor
 
 from . import logger, BotQuery, discord
 
@@ -34,8 +35,7 @@ async def generate_response(query: BotQuery) -> str:
             bot_mention = message.guild.me.mention
 
         system_prompt = [
-            {"role": "system", "content": f"You are a general purpose Discord bot, named @{bot_mention}. Your job is to help the user @{mention_name} with their queries."},
-            {"role": "assistant", "content": f"You are to engage in a conversation with the other user's in chat. Keep it informal and be prepared to engage in idle chat."},
+            {"role": "system", "content": f"You are a general purpose Discord bot, named {bot_mention}. Your job is to help the user {mention_name} with their queries."},
             {"role": "user", "content": message_content}
         ]
         
@@ -50,6 +50,8 @@ async def generate_response(query: BotQuery) -> str:
         response_message = response.choices[0].message['content'].strip()
         
         return response_message
+    except openai.api_requestor.error.APIConnectionError as e:
+        return "Sorry, I couldn't connect to the OpenAI API. Please try again later."
     except Exception as e:
         logger.error(f"Error generating response: {e}", exc_info=True)
         return "Sorry, I couldn't generate a response."
