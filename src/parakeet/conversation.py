@@ -7,6 +7,13 @@ from . import discord, logger
 class ConversationHistory:
     def __init__(self, root_message_id: int, timeout_seconds: int = 600):
         try:
+            if not isinstance(timeout_seconds, int):
+                raise TypeError("timeout_seconds must be an integer")
+            if not isinstance(root_message_id, int):
+                raise TypeError("root_message_id must be an integer")
+            if timeout_seconds <= 0:
+                raise ValueError("timeout_seconds must be greater than 0")
+
             self.root_message_id: int = root_message_id
             self.last_message_id: int = root_message_id
             self.history: List[Dict[str, str]] = []
