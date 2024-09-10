@@ -67,7 +67,8 @@ class ParakeetBot:
 
     async def on_message(self, message: discord.Message):
         try:
-            assert isinstance(message, discord.Message)
+            if not isinstance(message, discord.Message):
+                raise(TypeError("message must be an instance of discord.Message"))
 
             logger.info(f"Received message: {message.content} from {message.author}")
 
@@ -91,7 +92,7 @@ class ParakeetBot:
             if message.guild is not None and isinstance(message.author, discord.Member):
                 has_opt_in_role = discord.utils.get(message.author.roles, name=OPT_IN_ROLE_NAME) is not None
 
-            if not has_opt_in_role:
+            if not has_opt_in_role and message.author != self.bot.user:
                 logger.info(f"User does not have the opt-in role, ignoring message")
                 return
 
@@ -104,7 +105,7 @@ class ParakeetBot:
                 await process_gpt_message(query, bot_reply)
             elif bot_was_mentioned:
                 logger.info(f"Processing message as a mention of bot")
-                await process_gpt_message(query, bot_message)
+                await process_gpt_message(query, bot_reply)
             elif message.channel.type == discord.ChannelType.private and message.author != self.bot.user:
                 logger.info(f"Processing message in a private channel")
                 await process_gpt_message(query, bot_message)
@@ -112,7 +113,7 @@ class ParakeetBot:
                 logger.info(f"Message is neither a reply to bot nor a mention of bot, ignoring")
                 return
         except Exception as e:
-            logger.error(f"An error occurred: {e}")
+            logger.error(f"Error occured in parakeet.on_message: {e}")
 
     async def run(self):
         await self.bot.start(discord_token)

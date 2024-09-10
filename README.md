@@ -8,7 +8,7 @@ Parakeet Bot is a Discord bot that leverages OpenAI's GPT models to interact wit
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [Testing](#testing)
-- [Contributing](#contributing)
+- [Coverage](#coverage)
 - [License](#license)
 
 ## Installation
@@ -43,7 +43,6 @@ Ensure you have the following variables set in your `.env` file:
 OPENAI_API_KEY
 DISCORD_BOT_TOKEN
 OPT_IN_ROLE_NAME
-FEEDBACK_BASE_DIR
 COMMAND_PREFIX
 MAX_DISCORD_MESSAGE_LENGTH
 ```
@@ -64,9 +63,13 @@ To run the tests, use the following command:
 python -m unittest discover -s tests
 ```
 
-## Contributing
+## Coverage
 
-Contributions are welcome! Please open an issue or submit a pull request.
+To run the tests and generate a coverage report, use the following command:
+
+```sh
+./run_coverage.bat
+```
 
 ## License
 Apache License

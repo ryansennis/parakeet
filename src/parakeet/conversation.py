@@ -57,7 +57,7 @@ class ConversationManager:
                 conversation_key = message.reference.message_id
                 logger.info(f"Using existing conversation history for message {message.id}")
             else:
-                if message.author == bot_user:
+                if message.author.id == bot_user.id:
                     logger.info("The message is a root message from the bot, message will not be added to conversation history")
                     return
 
@@ -91,11 +91,11 @@ class ConversationManager:
         except Exception as e:
             logger.error(f"Error occurred while creating conversation: {str(e)}")
 
-    def get_conversation(self, root_message_id: int) -> ConversationHistory | None:
+    def get_conversation(self, message_id: int) -> ConversationHistory | None:
         try:
-            conversation_history: ConversationHistory | None = next((history for history in self.conversation_histories if history.root_message_id == root_message_id), None)
+            conversation_history: ConversationHistory | None = next((history for history in self.conversation_histories if history.last_message_id == message_id), None)
             if conversation_history:
-                logger.info(f"Found conversation history for root_message_id: {root_message_id}")
+                logger.info(f"Found conversation history for root_message_id: {message_id}")
             return conversation_history
         except Exception as e:
             logger.error(f"Error occurred while getting conversation history: {str(e)}")
