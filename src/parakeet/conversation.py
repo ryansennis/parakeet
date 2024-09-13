@@ -19,10 +19,11 @@ class ConversationHistory:
             self.history: List[Dict[str, str]] = []
             self.last_activity: datetime = datetime.now(timezone.utc)
             self.timeout: timedelta = timedelta(seconds=timeout_seconds)
+            self.add_message(root_message)
             logger.info(f"Initialized ConversationHistory with root_message.id: {root_message.id}")
         except Exception as e:
             logger.error(f"Error occurred in ConversationHistory initialization: {str(e)}")
-
+            
     def add_message(self, message: discord.Message) -> None:
         try:
             role = "assistant" if message.author.bot else "user"
@@ -31,6 +32,7 @@ class ConversationHistory:
             self.last_activity = datetime.now(timezone.utc)
             logger.info(f"Added message to conversation history for root_message: {self.root_message.id}")
         except Exception as e:
+            logger.error(f"Error occurred while adding message to conversation history: {str(e)}")
             logger.error(f"Error occurred while adding message to conversation history: {str(e)}")
 
     def is_expired(self) -> bool:
@@ -64,29 +66,31 @@ class ConversationManager:
     def handle_message(self, message: discord.Message, bot_user: discord.User) -> None:
         try:
             if message.reference is not None:
-                ref_message = message.reference.resolved
+                ref_message_id = message.reference.message_id
+                ref_message = next(
+                    (msg for history in self.conversation_histories for msg in [history.root_message, history.last_message] if msg.id == ref_message_id), 
+                    None
+                )
+                if ref_message is None:
+                    logger.error(f"Referenced message with id {ref_message_id} not found")
+                    return
                 logger.info(f"Using existing conversation history for message {message.id}")
+
+                conversation_history = self.get_conversation(ref_message)
+
+                conversation_history.add_message(message)
+                logger.info(f"Added message to conversation history for message {message.id}")
             else:
                 if message.author.id == bot_user.id:
                     logger.info("The message is a root message from the bot, message will not be added to conversation history")
                     return
-
+    
                 ref_message = message
                 self.create_conversation(
                     root_message=message,
                     timeout_seconds=600
                 )
                 logger.info(f"Created new conversation history for message {message.id}")
-                return
-
-            # Find the conversation history by key using get_conversation method
-            conversation_history = self.get_conversation(ref_message)
-
-            if conversation_history:
-                conversation_history.add_message(message)
-                logger.info(f"Added message to conversation history for message {message.id}")
-            else:
-                logger.error(f"Conversation history not found for message {message.id}")
         except Exception as e:
             logger.error(f"An error occurred while handling message: {e}")
 
@@ -109,12 +113,13 @@ class ConversationManager:
     def get_conversation(self, message: discord.Message) -> Optional[ConversationHistory]:
         try:
             conversation_history: Optional[ConversationHistory] = next(
-                (history for history in self.conversation_histories if history.root_message.id == message.id), None
+                (history for history in self.conversation_histories if history.root_message.id == message.id or history.last_message.id == message.id),
+                None
             )
             if conversation_history:
-                logger.info(f"Found conversation with root_message.id: {message.id}")  # Debugging print
+                logger.info(f"Found conversation with last_message.id: {message.id}")
             else:
-                logger.info(f"No conversation found with root_message.id: {message.id}")  # Debugging print
+                logger.info(f"No conversation found with last_message.id: {message.id}")
             return conversation_history
         except Exception as e:
             logger.error(f"Error occurred while getting conversation history: {str(e)}")
@@ -122,7 +127,7 @@ class ConversationManager:
         
     def add_message_to_conversation(self, last_message: discord.Message, next_message: discord.Message) -> None:
         try:
-            conversation_history: Optional[ConversationHistory] = self.get_conversation(last_message.id)
+            conversation_history: Optional[ConversationHistory] = self.get_conversation(last_message)
             if conversation_history:
                 conversation_history.add_message(next_message)
             else:
@@ -130,25 +135,25 @@ class ConversationManager:
         except Exception as e:
             logger.error(f"Error occurred while adding message to conversation history: {str(e)}")
 
-    def delete_conversation(self, root_message: discord.Message) -> None:
+    def delete_conversation(self, message: discord.Message) -> None:
         try:
-            conversation_history: Optional[ConversationHistory] = self.get_conversation(root_message.id)
+            conversation_history: Optional[ConversationHistory] = self.get_conversation(message)
             if conversation_history:
                 self.conversation_histories.remove(conversation_history)
-                logger.info(f"Deleted conversation history for root_message.id: {root_message.id}")
+                logger.info(f"Deleted conversation history for message.id: {message.id}")
             else:
-                logger.error(f"Conversation history not found for root_message.id: {root_message.id}")
+                logger.error(f"Conversation history not found for message.id: {message.id}")
         except Exception as e:
             logger.error(f"Error occurred while deleting conversation history: {str(e)}")
 
-    def reset_conversation(self, message_id: int) -> None:
+    def reset_conversation(self, message: discord.Message) -> None:
         try:
-            conversation_history: Optional[ConversationHistory] = self.get_conversation(message_id)
+            conversation_history: Optional[ConversationHistory] = self.get_conversation(message)
             if conversation_history:
                 self.conversation_histories.remove(conversation_history)
-                logger.info(f"Reset conversation history for root_message.id: {message_id}")
+                logger.info(f"Reset conversation history for message.id: {message.id}")
             else:
-                logger.error(f"Conversation history not found for root_message.id: {message_id}")
+                logger.error(f"Conversation history not found for message.id: {message.id}")
         except Exception as e:
             logger.error(f"Error occurred while resetting conversation history: {str(e)}")
 
